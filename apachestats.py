@@ -77,6 +77,7 @@ class Analyzer:
         # extract fld
         df['referer_fld'] = df[~df.Referer.isnull()].Referer.apply(self._get_fld)
         df['date'] = df.request_time.dt.date
+        df['hour'] = df.request_time.dt.hour
 
         # calc days
         total_seconds = (df.request_time.max() - df.request_time.min()).total_seconds()
@@ -94,8 +95,10 @@ class Analyzer:
 
         print('summary:'.upper())
         print(f'- distinct days: {n_distinct_dates}')
-        print(f'- total humans: {len(humans)}')
-        print(f'- total robots: {len(robots)}')
+        print(f'- first date: {df.date.min()}')
+        print(f'- last date: {df.date.max()}')
+        print(f'- total humans seen: {len(humans)}')
+        print(f'- total robots seen: {len(robots)}')
         print(f'- average humans/day: {humans_per_day.mean()}')
         print(f'- maximum humans/day: {humans_per_day.max()}')
 
@@ -108,6 +111,12 @@ class Analyzer:
             perc = round(100*count/len(true_referers), 2)
             print(f'- {referer_fld}  {perc}%')
 
+
+        print(f'top {self.top_k} busiest hours:'.upper())
+        top_hours = human_requests.groupby('hour').size().sort_values(ascending=False).head(self.top_k)
+        for hour,count in top_hours.items():
+            perc = round(100*count/len(human_requests), 2)
+            print(f'- {hour}  {perc}%')
 
         print(f'top {self.top_k} user location:'.upper())
         # extract geography
